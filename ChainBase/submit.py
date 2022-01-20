@@ -1,0 +1,97 @@
+#Parameters
+"""
+NSTEPS
+STEPSIZE
+OUTPUTFILENAME
+CONSOLELOG
+
+NJOBS
+EXECUTABLE
+SUBMITSCRIPT
+SUBMITSCRIPTOUTPUT
+LOGFILE
+ERRORFILE
+"""
+
+import os
+from sys import argv
+
+SUBMITDIRECTORYPrefix = "SUBMITDIRECTORYPrefixBASE"
+DATADIRECTORYPrefix = "DATADIRECTORYPrefixBASE"
+ChainNum = "ChainNumBASE"
+JobNum = "JobNumBASE"
+
+SUBMITSCRIPTPrefix = SUBMITDIRECTORYPrefix+"/SubmitScript/"
+SUBMITSCRIPTBase = "submit"
+SUBMITSCRIPTSuffix = ".sh"
+
+SUBMITSCRIPTOUTPUTPrefix = SUBMITDIRECTORYPrefix+"/SubmitOutput/"
+LOGFILEPrefix = SUBMITDIRECTORYPrefix+"/SubmitLog/"
+ERRORFILEPrefix = SUBMITDIRECTORYPrefix+"/SubmitError/"
+
+CONFIGNAMEPrefix = SUBMITDIRECTORYPrefix+"/"
+CONFIGNAMEBase = "jointFit2020"
+CONFIGNAMESuffix = ".cfg"
+
+def replaceText(File,oldText,newText):
+    with open(File) as f:
+        newText=f.read().replace(oldText,newText)
+    with open(File,"w") as f:
+        f.write(newText)
+
+def main():
+    NJOB = JobNum
+
+    EXECUTABLEPrefix = SUBMITDIRECTORYPrefix
+    EXECUTABLE = "jointFit2020"
+    EXECUTABLESuffix = ".sh"
+    
+    CONSOLELOGBASE = "MaCh3OutputConsole"
+    CONSOLELOGSUFFIX = ".log"
+
+    OUTFILENAMEBASE = "MaCh3Output"
+    OUTFILENAMESUFFIX = ".root"
+
+    STARTFROMFILE = False
+    STARTINGFILE = "STARTINGFILEBASE"
+    if (STARTINGFILE!=""):
+        STARTFROMFILE = True
+    
+    CONSOLELOG = DATADIRECTORYPrefix+CONSOLELOGBASE+"_"+str(NJOB)+CONSOLELOGSUFFIX
+    CONFIGNAME = SUBMITSCRIPTPrefix+CONFIGNAMEBase+"_"+str(NJOB)+CONFIGNAMESuffix
+    OUTFILENAME = DATADIRECTORYPrefix+OUTFILENAMEBASE+"_"+str(NJOB)+OUTFILENAMESUFFIX
+    
+    JOBSCRIPT = SUBMITSCRIPTPrefix+EXECUTABLE+"_"+str(NJOB)+".sh"
+    SUBMITSCRIPT = SUBMITSCRIPTPrefix+SUBMITSCRIPTBase+"_"+str(NJOB)+".sh"
+    SUBMITSCRIPTOUTPUT = SUBMITSCRIPTOUTPUTPrefix+EXECUTABLE+"_"+str(NJOB)+".out"
+    LOGFILE = LOGFILEPrefix+EXECUTABLE+"_"+str(NJOB)+".log"
+    ERRORFILE = ERRORFILEPrefix+EXECUTABLE+"_"+str(NJOB)+".err"
+    
+    CONFIGCopyCommand = "cp "+CONFIGNAMEPrefix+CONFIGNAMEBase+CONFIGNAMESuffix+" "+CONFIGNAME
+    JOBSCRIPTCopyCommand = "cp "+SUBMITDIRECTORYPrefix+EXECUTABLE+EXECUTABLESuffix+" "+JOBSCRIPT
+    SUMBITSCRIPTCopyCommand = "cp "+SUBMITDIRECTORYPrefix+SUBMITSCRIPTBase+SUBMITSCRIPTSuffix+" "+SUBMITSCRIPT
+
+    os.system(CONFIGCopyCommand)
+    os.system(JOBSCRIPTCopyCommand)
+    os.system(SUMBITSCRIPTCopyCommand)
+    
+    replaceText(SUBMITSCRIPT,"EXECUTABLENAME",JOBSCRIPT)
+    replaceText(SUBMITSCRIPT,"SUBMITSCRIPTOUTPUT",SUBMITSCRIPTOUTPUT)
+    replaceText(SUBMITSCRIPT,"LOGFILE",LOGFILE)
+    replaceText(SUBMITSCRIPT,"ERRORFILE",ERRORFILE)
+    
+    replaceText(JOBSCRIPT,"CONFIGNAME",CONFIGNAME)
+    replaceText(JOBSCRIPT,"CONSOLELOG",CONSOLELOG)
+    
+    replaceText(CONFIGNAME,"OUTPUTROOTNAME",OUTFILENAME)
+    replaceText(CONFIGNAME,"STARTINGFILE",STARTINGFILE)
+
+    if (STARTFROMFILE==True):
+        replaceText(CONFIGNAME,"STARTFROMFILEBOOL","true")
+    else:
+        replaceText(CONFIGNAME,"STARTFROMFILEBOOL","false")
+    
+    SUBMITCommand = "sbatch "+SUBMITSCRIPT
+    os.system(SUBMITCommand)
+        
+main()
