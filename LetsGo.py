@@ -1,5 +1,5 @@
 import os
-from sys import argv
+import sys
 
 def replaceText(File,oldText,newText):
     with open(File) as f:
@@ -50,6 +50,13 @@ def main():
         print("Invalid Job Number")
         quit()
 
+    try:
+        SubmitJobs = int(input("Submit jobs to queue? [1 for yes, 0 for no]: "))
+    except:
+        print("Invalid answer")
+        quit()
+
+        
     ExecName = ""
     try:
         ExecName = input("Executable to run? [Given in relative path to MaCh3 Install, e.g. ./bin/jointFit]: ")
@@ -121,12 +128,6 @@ def main():
     except:
         print("Output directory not found. Using current directory. If this is not acceptable, export OUTDIR=/path/to/output")
         OutDirectory = os.environ['PWD']
-
-    try:
-        SubmitJobs = int(input("Submit jobs to queue? [1 for yes, 0 for no]: "))
-    except:
-        print("Invalid answer")
-        quit()
 
     if (SubmitJobs == 1):
         SubmitJobs = True
@@ -207,7 +208,7 @@ def main():
         CopyCommand = "cp "+ConfigName+" "+Temp_ConfigName
         os.system(CopyCommand)
 
-        SedCommand = "sed -i 's|OUTPUTNAME.*|OUTPUTNAME = "+OutputName_iChain+"|' "+Temp_ConfigName
+        SedCommand = "sed -i 's|OUTPUTNAME.*|OUTPUTNAME = \""+OutputName_iChain+"\"|' "+Temp_ConfigName
         os.system(SedCommand)
 
         if (StartFromFile):
@@ -269,4 +270,9 @@ def main():
                 except:
                     print("qsub command not available")
 
+Version = sys.version_info[0]
+if (Version != 3):
+    print("Python3 required")
+    quit()
+    
 main()
