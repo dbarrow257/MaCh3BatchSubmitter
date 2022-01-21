@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd MACH3INSTALL
+source setup.sh
+export OMP_NUM_THREADS=NTHREADS
+
+EXECNAME CONFIGNAME > CONSOLELOG

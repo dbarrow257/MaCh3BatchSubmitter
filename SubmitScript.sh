@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=JointFit2020
+#SBATCH --job-name=JOBNAME
 #SBATCH --output=SUBMITSCRIPTOUTPUT
 #SBATCH --error=ERRORFILE
 #SBATCH --account=rpp-blairt2k
