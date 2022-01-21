@@ -212,13 +212,13 @@ def main():
         os.system(SedCommand)
 
         if (StartFromFile):
-            SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = True|' "+Temp_ConfigName
+            SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = true|' "+Temp_ConfigName
         else:
-            SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = False|' "+Temp_ConfigName
+            SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = false|' "+Temp_ConfigName
         os.system(SedCommand)
 
         if (StartFromFile):
-            SedCommand = "sed -i 's|POSFILES.*|POSFILES = "+OutputName_iChain_m1+"|' "+Temp_ConfigName
+            SedCommand = "sed -i 's|POSFILES.*|POSFILES = \""+OutputName_iChain_m1+"\"|' "+Temp_ConfigName
             os.system(SedCommand)
 
         SedCommand = "sed -i 's|NSTEPS.*|NSTEPS = "+str(nSteps)+"|' "+Temp_ConfigName
