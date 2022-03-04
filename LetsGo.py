@@ -13,9 +13,25 @@ def main():
     WorkDirectory = os.environ['PWD']
     
     try:
-        nChains = int(input("How many chains?: "))
+        MaCh3Install = os.environ['MACH3']
     except:
-        print("Invalid number of chains")
+        print("MaCh3 install not found. Please source setup.sh in MaCh3 install or export $MACH3=/path/to/MACH3")
+        quit()
+
+    if (os.path.exists(MaCh3Install) == False):
+        print("MaCh3 install not found. Given:"+MaCh3Install)
+        quit()
+
+    try:
+        nJobs = int(input("How many jobs?: "))
+    except:
+        print("Invalid number of jobs")
+        quit()
+
+    try:
+        nChainsPerJob = int(input("How many chains per job?: "))
+    except:
+        print("Invalid number of chains per job")
         quit()
         
     try:
@@ -25,7 +41,7 @@ def main():
         quit()
 
     try:
-        nThreads = int(input("How many threads per chain?: "))
+        nThreads = int(input("How many threads per job?: "))
     except:
         print("Invalid number of threads")
         quit()
@@ -33,29 +49,12 @@ def main():
     if (nThreads == 0):
         print("\tDefaulting to use 1 thread")
         nThreads = 1
-        
-    try:
-        MaCh3Install = os.environ['MACH3']
-    except:
-        print("MaCh3 install not found. Please source setup.sh in MaCh3 install or export $MACH3=/path/to/MACH3")
-        quit()
-
-    if (os.path.exists(MaCh3Install) == False):
-        print("MaCh3 install not found. Given:"+MaCh3Install)
-        quit()
     
     try:
-        JobNumber = int(input("Job Number? [0 for starting new chain, other for continuing chain]: "))
+        JobNumber = int(input("Job Number? [0 for starting new job, other for continuing job]: "))
     except:
         print("Invalid Job Number")
         quit()
-
-    try:
-        SubmitJobs = int(input("Submit jobs to queue? [1 for yes, 0 for no]: "))
-    except:
-        print("Invalid answer")
-        quit()
-
         
     ExecName = ""
     try:
@@ -129,23 +128,29 @@ def main():
         print("Output directory not found. Using current directory. If this is not acceptable, export OUTDIR=/path/to/output")
         OutDirectory = os.environ['PWD']
 
-    if (SubmitJobs == 1):
-        SubmitJobs = True
-    else:
-        SubmitJobs = False
+    try:
+        SubmitJobs = int(input("Submit jobs to queue? [1 for yes, 0 for no]: "))
+    except:
+        print("Invalid answer")
+        quit()
         
     print("\n\n")
     print("Summary: ---------")
     print("\tMaCh3 Install:"+MaCh3Install)
-    print("\tNumber of Chains:"+str(nChains))
-    print("\tNumber of Steps per Chain:"+str(nSteps))
-    print("\tNumber of Threads per Chain:"+str(nThreads))
+    print("\tNumber of Jobs:"+str(nJobs))
+    print("\tNumber of Steps per Job:"+str(nSteps))
+    print("\tNumber of Threads per Job:"+str(nThreads))
     print("\tJob Number:"+str(JobNumber))
     print("\tExecutable:"+ExecName)
     print("\tBase Config:"+ConfigName)
     print("\tBase RunScript:"+RunScriptName)
     print("\tBase SubmitScript:"+SubmitScriptName)
     print("\tOutput Directory:"+OutDirectory)
+
+    if (SubmitJobs == 1):
+        SubmitJobs = True
+    else:
+        SubmitJobs = False
 
     if (SubmitJobs):
         print("\tSubmitting jobs to queue")
@@ -163,99 +168,113 @@ def main():
     else:
         StartFromFile = True
         
-    for iChain in range(nChains):
-        ChainNum_iChain = str(iChain)
-        FileNameBase_iChain = "Chain_"+ChainNum_iChain
-        OutDir_iChain = OutDirectory+"/Output_"+FileNameBase_iChain+"/"
-        JobName_iChain = "MaCh3_"+FileNameBase_iChain+"_JobNumber_"+str(JobNumber)
-        OutputName_iChain = OutDir_iChain+JobName_iChain+".root"
-        OutputName_iChain_m1 = OutDir_iChain+"MaCh3_"+FileNameBase_iChain+"_JobNumber_"+str(JobNumber-1)+".root"
-        ScriptDir_iChain = WorkDirectory+"/Script_"+FileNameBase_iChain+"/"
-        ScriptDir_Log_iChain = ScriptDir_iChain+"/SubmitLog"
-        ScriptDir_Error_iChain = ScriptDir_iChain+"/SubmitError"
-        ScriptDir_Output_iChain = ScriptDir_iChain+"/SubmitOutput"
-        ScriptDir_Submit_iChain = ScriptDir_iChain+"/SubmitScript"
-        ConfigName_iChain = ScriptDir_Submit_iChain+"/Config_"+str(iChain)+"_JobNumber_"+str(JobNumber)+".cfg"
-        RunScriptName_iChain = ScriptDir_Submit_iChain+"/RunScript_"+str(iChain)+"_JobNumber_"+str(JobNumber)+".sh"
-        SubmitScriptName_iChain = ScriptDir_Submit_iChain+"/SubmitScript_"+str(iChain)+"_JobNumber_"+str(JobNumber)+".sh"
-        ConsoleOutputName_iChain = ScriptDir_Output_iChain+"/ConsoleOutput_"+str(iChain)+"_JobNumber_"+str(JobNumber)+".log"
-        ScriptDirFileName_Error_iChain = ScriptDir_Error_iChain+"/SubmitError+"+str(iChain)+"_JobNumber_"+str(JobNumber)+".log"
-        ScriptDirFileName_Log_iChain = ScriptDir_Log_iChain+"/SubmitLog+"+str(iChain)+"_JobNumber_"+str(JobNumber)+".log"
-        
-        if (StartFromFile and os.path.exists(OutputName_iChain_m1) == False):
-            print("Starting from previous chain but did not find:" + OutputName_iChain_m1)
-            quit()
-        
-        MkdirCommand  = "mkdir -p "+ScriptDir_iChain
-        os.system(MkdirCommand)
-        
-        MkdirCommand  = "mkdir -p "+ScriptDir_Log_iChain
-        os.system(MkdirCommand)
+    for iJob in range(nJobs):
+        JobNum_iJob = str(iJob)
+        FileNameBase_iJob = "Job_"+JobNum_iJob
+        OutDir_iJob = OutDirectory+"/Output_"+FileNameBase_iJob+"/"
+        JobName_iJob = "MaCh3_"+FileNameBase_iJob+"_JobNumber_"+str(JobNumber)
+        ScriptDir_iJob = WorkDirectory+"/Script_"+FileNameBase_iJob+"/"
+        ScriptDir_Log_iJob = ScriptDir_iJob+"/SubmitLog"
+        ScriptDir_Error_iJob = ScriptDir_iJob+"/SubmitError"
+        ScriptDir_Output_iJob = ScriptDir_iJob+"/SubmitOutput"
+        ScriptDir_Submit_iJob = ScriptDir_iJob+"/SubmitScript"
+        RunScriptName_iJob = ScriptDir_Submit_iJob+"/RunScript_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".sh"
+        SubmitScriptName_iJob = ScriptDir_Submit_iJob+"/SubmitScript_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".sh"
+        ScriptDirFileName_Error_iJob = ScriptDir_Error_iJob+"/SubmitError+"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
+        ScriptDirFileName_Log_iJob = ScriptDir_Log_iJob+"/SubmitLog+"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
 
-        MkdirCommand  = "mkdir -p "+ScriptDir_Error_iChain
-        os.system(MkdirCommand)
+        OutputName_iJob = []
+        for iChain in range(nChainsPerJob):
+            OutputName_iJob.append(OutDir_iJob+JobName_iJob+"_Chain_"+str(iChain)+".root")
 
-        MkdirCommand  = "mkdir -p "+ScriptDir_Output_iChain
-        os.system(MkdirCommand)
+        OutputName_iJob_m1 = []
+        for iChain in range(nChainsPerJob):
+            OutputName_iJob_m1.append(OutDir_iJob+"MaCh3_"+FileNameBase_iJob+"_JobNumber_"+str(JobNumber-1)+"_Chain_"+str(iChain)+".root")
 
-        MkdirCommand  = "mkdir -p "+ScriptDir_Submit_iChain
+        ConfigName_iJob = []
+        for iChain in range(nChainsPerJob):
+            ConfigName_iJob.append(ScriptDir_Submit_iJob+"/Config_"+str(iJob)+"_JobNumber_"+str(JobNumber)+"_Chain_"+str(iChain)+".cfg")
+
+        ConsoleOutputName_iJob = []
+        for iChain in range(nChainsPerJob):
+            ConsoleOutputName_iJob.append(ScriptDir_Output_iJob+"/ConsoleOutput_"+str(iJob)+"_JobNumber_"+str(JobNumber)+"_Chain_"+str(iChain)+".log")
+        
+        MkdirCommand  = "mkdir -p "+ScriptDir_iJob
         os.system(MkdirCommand)
         
-        MkdirCommand = "mkdir -p "+OutDir_iChain
+        MkdirCommand  = "mkdir -p "+ScriptDir_Log_iJob
         os.system(MkdirCommand)
 
-        Temp_ConfigName = WorkDirectory+"/Config_Temp.cfg"
-        CopyCommand = "cp "+ConfigName+" "+Temp_ConfigName
-        os.system(CopyCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Error_iJob
+        os.system(MkdirCommand)
 
-        SedCommand = "sed -i 's|OUTPUTNAME.*|OUTPUTNAME = \""+OutputName_iChain+"\"|' "+Temp_ConfigName
-        os.system(SedCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Output_iJob
+        os.system(MkdirCommand)
 
-        if (StartFromFile):
-            SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = true|' "+Temp_ConfigName
-        else:
-            SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = false|' "+Temp_ConfigName
-        os.system(SedCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Submit_iJob
+        os.system(MkdirCommand)
+        
+        MkdirCommand = "mkdir -p "+OutDir_iJob
+        os.system(MkdirCommand)
 
-        if (StartFromFile):
-            SedCommand = "sed -i 's|POSFILES.*|POSFILES = \""+OutputName_iChain_m1+"\"|' "+Temp_ConfigName
+        for iChain in range(nChainsPerJob):
+            if (StartFromFile and os.path.exists(OutputName_iJob_m1[iChain]) == False):
+                print("Starting from previous job but did not find:" + OutputName_iJob_m1[iChain])
+                quit()
+                
+            Temp_ConfigName = WorkDirectory+"/Config_Temp.cfg"
+            CopyCommand = "cp "+ConfigName+" "+Temp_ConfigName
+            os.system(CopyCommand)
+            
+            SedCommand = "sed -i 's|OUTPUTNAME.*|OUTPUTNAME = \""+OutputName_iJob[iChain]+"\"|' "+Temp_ConfigName
+            os.system(SedCommand)
+            
+            if (StartFromFile):
+                SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = true|' "+Temp_ConfigName
+            else:
+                SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = false|' "+Temp_ConfigName
+            os.system(SedCommand)
+            
+            if (StartFromFile):
+                SedCommand = "sed -i 's|POSFILES.*|POSFILES = \""+OutputName_iJob_m1[iChain]+"\"|' "+Temp_ConfigName
+                os.system(SedCommand)
+
+            SedCommand = "sed -i 's|NSTEPS.*|NSTEPS = "+str(nSteps)+"|' "+Temp_ConfigName
             os.system(SedCommand)
 
-        SedCommand = "sed -i 's|NSTEPS.*|NSTEPS = "+str(nSteps)+"|' "+Temp_ConfigName
-        os.system(SedCommand)
-
-        mvCommand = "mv "+Temp_ConfigName+" "+ConfigName_iChain
-        os.system(mvCommand)
+            mvCommand = "mv "+Temp_ConfigName+" "+ConfigName_iJob[iChain]
+            os.system(mvCommand)
 
         Temp_RunScriptName = WorkDirectory+"/RunScript_Temp.sh"
         CopyCommand = "cp "+RunScriptName+" "+Temp_RunScriptName
         os.system(CopyCommand)
 
         replaceText(Temp_RunScriptName,"MACH3INSTALL",MaCh3Install)
-        replaceText(Temp_RunScriptName,"NTHREADS",str(nThreads))
-        replaceText(Temp_RunScriptName,"CONFIGNAME",ConfigName_iChain)
-        replaceText(Temp_RunScriptName,"EXECNAME",ExecName)
-        replaceText(Temp_RunScriptName,"CONSOLELOG",ConsoleOutputName_iChain)
+        replaceText(Temp_RunScriptName,"NTHREADS",str(nThreads//nChainsPerJob))
 
-        mvCommand = "mv "+Temp_RunScriptName+" "+RunScriptName_iChain
+        for iChain in range(nChainsPerJob):
+            SedCommand = "sed -i -e '/^#INSERTJOB/a"+ExecName+" "+ConfigName_iJob[iChain]+" > "+ConsoleOutputName_iJob[iChain]+" &' "+Temp_RunScriptName
+            os.system(SedCommand)
+
+        mvCommand = "mv "+Temp_RunScriptName+" "+RunScriptName_iJob
         os.system(mvCommand)
 
         Temp_SubmitScriptName = WorkDirectory+"/SubmitScript_Temp.sh"
         CopyCommand = "cp "+SubmitScriptName+" "+Temp_SubmitScriptName
         os.system(CopyCommand)
 
-        replaceText(Temp_SubmitScriptName,"JOBNAME",JobName_iChain)
-        replaceText(Temp_SubmitScriptName,"EXECUTABLENAME",RunScriptName_iChain)
-        replaceText(Temp_SubmitScriptName,"SUBMITSCRIPTOUTPUT",ScriptDirFileName_Log_iChain)
-        replaceText(Temp_SubmitScriptName,"ERRORFILE",ScriptDirFileName_Error_iChain)
+        replaceText(Temp_SubmitScriptName,"JOBNAME",JobName_iJob)
+        replaceText(Temp_SubmitScriptName,"EXECUTABLENAME",RunScriptName_iJob)
+        replaceText(Temp_SubmitScriptName,"SUBMITSCRIPTOUTPUT",ScriptDirFileName_Log_iJob)
+        replaceText(Temp_SubmitScriptName,"ERRORFILE",ScriptDirFileName_Error_iJob)
 
-        mvCommand = "mv "+Temp_SubmitScriptName+" "+SubmitScriptName_iChain
+        mvCommand = "mv "+Temp_SubmitScriptName+" "+SubmitScriptName_iJob
         os.system(mvCommand)
 
         if (SubmitJobs):
             Submitted = False
             
-            SubmitCommand = "sbatch "+SubmitScriptName_iChain
+            SubmitCommand = "sbatch "+SubmitScriptName_iJob
             try:
                 os.system(SubmitCommand)
                 Submitted = True
@@ -263,7 +282,7 @@ def main():
                 print("sbatch command not available")
                 
             if (Submitted == False):
-                SubmitCommand = "qsub "+SubmitScriptName_iChain
+                SubmitCommand = "qsub "+SubmitScriptName_iJob
                 try:
                     os.system(SubmitCommand)
                     Submitted =	True
