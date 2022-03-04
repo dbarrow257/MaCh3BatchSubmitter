@@ -253,7 +253,13 @@ def main():
         replaceText(Temp_RunScriptName,"NTHREADS",str(nThreads//nChainsPerJob))
 
         for iChain in range(nChainsPerJob):
+            SedCommand = "sed -i -e '/^#INSERTJOB/abackground_pid_"+str(iChain)+"=$!' "+Temp_RunScriptName
+            os.system(SedCommand)
             SedCommand = "sed -i -e '/^#INSERTJOB/a"+ExecName+" "+ConfigName_iJob[iChain]+" > "+ConsoleOutputName_iJob[iChain]+" &' "+Temp_RunScriptName
+            os.system(SedCommand)
+
+        for iChain in range(nChainsPerJob):
+            SedCommand = "sed -i -e '/^#INSERTWAIT/await ${background_pid_"+str(iChain)+"} ' "+Temp_RunScriptName
             os.system(SedCommand)
 
         mvCommand = "mv "+Temp_RunScriptName+" "+RunScriptName_iJob
@@ -274,7 +280,8 @@ def main():
         if (SubmitJobs):
             Submitted = False
             
-            SubmitCommand = "sbatch "+SubmitScriptName_iJob
+            #SubmitCommand = "sbatch "+SubmitScriptName_iJob
+            SubmitCommand = "condor_submit "+SubmitScriptName_iJob
             try:
                 os.system(SubmitCommand)
                 Submitted = True
