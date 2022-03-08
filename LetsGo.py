@@ -138,6 +138,7 @@ def main():
     print("Summary: ---------")
     print("\tMaCh3 Install:"+MaCh3Install)
     print("\tNumber of Jobs:"+str(nJobs))
+    print("\tNumber of chains per Job:"+str(nChainsPerJob))
     print("\tNumber of Steps per Job:"+str(nSteps))
     print("\tNumber of Threads per Job:"+str(nThreads))
     print("\tJob Number:"+str(JobNumber))

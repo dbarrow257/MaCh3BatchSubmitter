@@ -2,53 +2,55 @@ import sys
 import os
 
 def main():
-    nMaxChains = 1000
-    nMaxJobs = 1000
+    nMax = 1000
 
     FilesToDelete = []
     Files = []
 
-    for iChain in range(0,nMaxChains):
-        if (os.path.exists("Output_Chain_"+str(iChain))):
+    for iJob in range(0,nMax):
+        if (os.path.exists("Output_Job_"+str(iJob))):
 
             Start = 0
-            Stop = nMaxJobs
+            Stop = nMax
             if (len(sys.argv) > 1):
                 Start = int(sys.argv[1])
                 Stop = Start+1
 
-            CombFileName = "Output_Chain_"+str(iChain)+"/MaCh3_MCMC_"+str(iChain)+".root"
+            CombFileName = "Output_Job_"+str(iJob)+"/MaCh3_MCMC_"+str(iJob)+".root"
             HaddCommand = "hadd -n 10 "+CombFileName+" "
                 
-            for iJob in range(Start,Stop):
-                FileName = "Output_Chain_"+str(iChain)+"/MaCh3_Chain_"+str(iChain)+"_JobNumber_"+str(iJob)+".root"
-                if (os.path.exists(FileName)):
-                    NewFileName = FileName+".tmp"
-                    Command = "cp "+FileName+" "+NewFileName
-                    os.system(Command)
-                    #print(Command)
+            for iJobNumber in range(Start,Stop):
+                for iChain in range(0,nMax):
+                    FileName = "Output_Job_"+str(iJob)+"/MaCh3_Job_"+str(iJob)+"_JobNumber_"+str(iJobNumber)+"_Chain_"+str(iChain)+".root"
+                    if (os.path.exists(FileName)):
+                        NewFileName = FileName+".tmp"
+                        Command = "cp "+FileName+" "+NewFileName
 
-                    FilesToDelete.append(NewFileName)
-                    HaddCommand += NewFileName+" "
-                else:
-                    break
-
+                        print(Command)
+                        os.system(Command)
+                        
+                        FilesToDelete.append(NewFileName)
+                        HaddCommand += NewFileName+" "
+                    else:
+                        break
+                        
             FilesToDelete.append(CombFileName)
             Files.append(CombFileName)
+
+            print(HaddCommand)
             os.system(HaddCommand)
-            #print(HaddCommand)
 
     Command = "hadd MaCh3_MCMC.root "
     for File in Files:
         Command += File+" "
 
+    print(Command)
     os.system(Command)
-    #print(Command)
 
     for	File in	FilesToDelete:
         Command = "rm "+File
 
+        print(Command)
         os.system(Command)
-        #print(Command)
     
 main()
