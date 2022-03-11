@@ -40,7 +40,7 @@ def main():
             print(HaddCommand)
             os.system(HaddCommand)
 
-    Command = "hadd MaCh3_MCMC.root "
+    Command = "hadd -f MaCh3_MCMC.root "
     for File in Files:
         Command += File+" "
 
