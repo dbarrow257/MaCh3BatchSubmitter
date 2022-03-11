@@ -91,6 +91,24 @@ def main():
             quit()
 
     try:
+        SampleConfigDir = input("Sample Config Direcotry:")
+    except:
+        print("Invalid sample config directory string")
+        quit()
+
+    if (os.path.exists(WorkDirectory+"/"+SampleConfigDir) and (SampleConfigDir != '')):
+        SampleConfigDir = WorkDirectory+"/"+SampleConfigDir
+    else:
+        print("SampleConfigDir: "+SampleConfigDir+" not found in current working directory: "+WorkDirectory)
+        SampleConfigDir = WorkDirectory+"/SampleConfigs/"
+
+        if (os.path.exists(SampleConfigDir)):
+            print("\tDefaulting to use: "+SampleConfigDir)
+        else:
+            print("Not found valid run script")
+            quit()
+            
+    try:
         RunScriptName = input("Run Script Name:")
     except:
         print("Invalid run script name string")
@@ -144,6 +162,7 @@ def main():
     print("\tJob Number:"+str(JobNumber))
     print("\tExecutable:"+ExecName)
     print("\tBase Config:"+ConfigName)
+    print("\tSample Config Directory:"+SampleConfigDir)
     print("\tBase RunScript:"+RunScriptName)
     print("\tBase SubmitScript:"+SubmitScriptName)
     print("\tOutput Directory:"+OutDirectory)
@@ -243,6 +262,12 @@ def main():
             SedCommand = "sed -i 's|NSTEPS.*|NSTEPS = "+str(nSteps)+"|' "+Temp_ConfigName
             os.system(SedCommand)
 
+            SedCommand = "sed -i 's|ATMCONFIGDIR.*|ATMCONFIGDIR = \""+SampleConfigDir+"\"|' "+Temp_ConfigName
+            os.system(SedCommand)
+
+            SedCommand = "sed -i 's|BEAMCONFIGDIR.*|BEAMCONFIGDIR = \""+SampleConfigDir+"\"|' "+Temp_ConfigName
+            os.system(SedCommand)
+
             mvCommand = "mv "+Temp_ConfigName+" "+ConfigName_iJob[iChain]
             os.system(mvCommand)
 
@@ -281,8 +306,8 @@ def main():
         if (SubmitJobs):
             Submitted = False
             
-            #SubmitCommand = "sbatch "+SubmitScriptName_iJob
-            SubmitCommand = "condor_submit "+SubmitScriptName_iJob
+            SubmitCommand = "sbatch "+SubmitScriptName_iJob
+            #SubmitCommand = "condor_submit "+SubmitScriptName_iJob
             try:
                 os.system(SubmitCommand)
                 Submitted = True
