@@ -29,21 +29,27 @@ def main():
         quit()
 
     try:
+        nGPUsPerJob = int(input("How many GPUs per job?: "))
+    except:
+        print("Invalid number of GPUs")
+        quit()
+
+    try:
         nChainsPerJob = int(input("How many chains per job?: "))
     except:
         print("Invalid number of chains per job")
-        quit()
-        
-    try:
-        nSteps = int(input("How many steps per chain?: "))
-    except:
-        print("Invalid number of steps")
-        quit()
+        quit()        
 
     try:
         nThreads = int(input("How many threads per job?: "))
     except:
         print("Invalid number of threads")
+        quit()
+
+    try:
+        nSteps = int(input("How many steps per chain?: "))
+    except:
+        print("Invalid number of steps")
         quit()
 
     if (nThreads == 0):
@@ -156,6 +162,7 @@ def main():
     print("Summary: ---------")
     print("\tMaCh3 Install:"+MaCh3Install)
     print("\tNumber of Jobs:"+str(nJobs))
+    print("\tNumber of GPUs per Job:"+str(nGPUsPerJob))
     print("\tNumber of chains per Job:"+str(nChainsPerJob))
     print("\tNumber of Steps per Job:"+str(nSteps))
     print("\tNumber of Threads per Job:"+str(nThreads))
@@ -276,12 +283,13 @@ def main():
         os.system(CopyCommand)
 
         replaceText(Temp_RunScriptName,"MACH3INSTALL",MaCh3Install)
-        replaceText(Temp_RunScriptName,"NTHREADS",str(nThreads//nChainsPerJob))
+        replaceText(Temp_RunScriptName,"NTHREADS",str(nThreads))
 
         for iChain in range(nChainsPerJob):
+            iGPU = int(iChain/(nChainsPerJob/nGPUsPerJob))
             SedCommand = "sed -i -e '/^#INSERTJOB/abackground_pid_"+str(iChain)+"=$!' "+Temp_RunScriptName
             os.system(SedCommand)
-            SedCommand = "sed -i -e '/^#INSERTJOB/a"+ExecName+" "+ConfigName_iJob[iChain]+" > "+ConsoleOutputName_iJob[iChain]+" &' "+Temp_RunScriptName
+            SedCommand = "sed -i -e '/^#INSERTJOB/a CUDA_VISIBLE_DEVICES=\""+str(iGPU)+"\" "+ExecName+" "+ConfigName_iJob[iChain]+" > "+ConsoleOutputName_iJob[iChain]+" &' "+Temp_RunScriptName
             os.system(SedCommand)
 
         for iChain in range(nChainsPerJob):
