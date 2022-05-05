@@ -283,7 +283,7 @@ def main():
         os.system(CopyCommand)
 
         replaceText(Temp_RunScriptName,"MACH3INSTALL",MaCh3Install)
-        replaceText(Temp_RunScriptName,"NTHREADS",str(nThreads/nChainsPerJob))
+        replaceText(Temp_RunScriptName,"NTHREADS",str(int(nThreads/nChainsPerJob)))
 
         for iChain in range(nChainsPerJob):
             iGPU = int(iChain/(nChainsPerJob/nGPUsPerJob))
