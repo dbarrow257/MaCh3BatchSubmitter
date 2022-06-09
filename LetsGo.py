@@ -207,8 +207,8 @@ def main():
         ScriptDir_Submit_iJob = ScriptDir_iJob+"/SubmitScript"
         RunScriptName_iJob = ScriptDir_Submit_iJob+"/RunScript_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".sh"
         SubmitScriptName_iJob = ScriptDir_Submit_iJob+"/SubmitScript_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".sh"
-        ScriptDirFileName_Error_iJob = ScriptDir_Error_iJob+"/SubmitError+"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
-        ScriptDirFileName_Log_iJob = ScriptDir_Log_iJob+"/SubmitLog+"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
+        ScriptDirFileName_Error_iJob = ScriptDir_Error_iJob+"/SubmitError_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
+        ScriptDirFileName_Log_iJob = ScriptDir_Log_iJob+"/SubmitLog_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
 
         OutputName_iJob = []
         for iChain in range(nChainsPerJob):
