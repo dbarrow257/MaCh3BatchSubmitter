@@ -1,4 +1,6 @@
 #!/bin/bash
+#SBATCH --mail-user=daniel.barrow@physics.ox.ac.uk
+#SBATCH --mail-type=ALL
 #SBATCH --job-name=JOBNAME
 #SBATCH --output=SUBMITSCRIPTOUTPUT
 #SBATCH --error=ERRORFILE

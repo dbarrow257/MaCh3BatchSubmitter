@@ -10,8 +10,6 @@ def replaceText(File,oldText,newText):
 
 def main():
     print("\n")
-
-    JobName = "MaCh3"
     
     WorkDirectory = os.environ['PWD']
     
@@ -25,6 +23,11 @@ def main():
         print("MaCh3 install not found. Given:"+MaCh3Install)
         quit()
 
+    try:
+        JobName = input("How many jobs?: ")
+    except:
+        JobName = "MaCh3"
+        
     try:
         nJobs = int(input("How many jobs?: "))
     except:
