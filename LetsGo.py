@@ -24,7 +24,7 @@ def main():
         quit()
 
     try:
-        JobName = input("How many jobs?: ")
+        JobName = input("Job Name?: ")
     except:
         JobName = "MaCh3"
         
