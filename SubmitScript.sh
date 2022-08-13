@@ -1,12 +1,13 @@
-input                   = /dev/null
-executable              = EXECUTABLENAME
-output                  = SUBMITSCRIPTOUTPUT
-error                   = ERRORFILE
-log                     = LOGFILE
-notification            = never
-request_cpus            = 48
-request_memory          = 170 GB
-request_GPUs            = 2
-requirements            = (CUDADeviceName =?= "NVIDIA TITAN RTX")
+#!/bin/bash
+#SBATCH --job-name=JOBNAME
+#SBATCH --output=SUBMITSCRIPTOUTPUT
+#SBATCH --error=ERRORFILE
+#SBATCH --account=rpp-blairt2k
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --gres=gpu:v100l:1
+#SBATCH --time=2:59:00
+#SBATCH --mem=20G
+#SBATCH --array=ARRAY
 
-queue 1
+srun EXECUTABLENAME

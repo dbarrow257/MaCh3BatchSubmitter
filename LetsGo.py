@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 def replaceText(File,oldText,newText):
     with open(File) as f:
@@ -10,6 +11,8 @@ def replaceText(File,oldText,newText):
 def main():
     print("\n")
 
+    JobName = "MaCh3"
+    
     WorkDirectory = os.environ['PWD']
     
     try:
@@ -35,9 +38,9 @@ def main():
         quit()
 
     try:
-        nChainsPerJob = int(input("How many chains per job?: "))
+        nExecsPerJob = int(input("How many execs per job?: "))
     except:
-        print("Invalid number of chains per job")
+        print("Invalid number of execs per job")
         quit()        
 
     try:
@@ -57,9 +60,9 @@ def main():
         nThreads = 1
     
     try:
-        JobNumber = int(input("Job Number? [0 for starting new job, other for continuing job]: "))
+        nIterations = int(input("How many iterations: "))
     except:
-        print("Invalid Job Number")
+        print("Invalid Iteration Number")
         quit()
         
     ExecName = ""
@@ -163,10 +166,10 @@ def main():
     print("\tMaCh3 Install:"+MaCh3Install)
     print("\tNumber of Jobs:"+str(nJobs))
     print("\tNumber of GPUs per Job:"+str(nGPUsPerJob))
-    print("\tNumber of chains per Job:"+str(nChainsPerJob))
+    print("\tNumber of Executables per Job:"+str(nExecsPerJob))
     print("\tNumber of Steps per Job:"+str(nSteps))
     print("\tNumber of Threads per Job:"+str(nThreads))
-    print("\tJob Number:"+str(JobNumber))
+    print("\tNumber of Iterations:"+str(nIterations))
     print("\tExecutable:"+ExecName)
     print("\tBase Config:"+ConfigName)
     print("\tSample Config Directory:"+SampleConfigDir)
@@ -190,146 +193,147 @@ def main():
         print("Quiting..")
         quit()
 
-    if (JobNumber == 0):    
-        StartFromFile = False
-    else:
-        StartFromFile = True
+    ID = -1
+    for iIteration in range(nIterations):
+        if (iIteration == 0):    
+            StartFromFile = False
+        else:
+            StartFromFile = True
+
+        FileNameBase_iIter = "Iter_"+str(iIteration)
+        FileNameBase_m1_iIter = "Iter_"+str(iIteration-1)        
+
+        ScriptDir_iIter = WorkDirectory+"/Script_"+FileNameBase_iIter+"/"
+        ScriptDir_Log_iIter = ScriptDir_iIter+"/SubmitLog"
+        ScriptDir_Error_iIter = ScriptDir_iIter+"/SubmitError"
+        ScriptDir_Output_iIter = ScriptDir_iIter+"/SubmitOutput"
+        ScriptDir_Submit_iIter = ScriptDir_iIter+"/SubmitScript"
         
-    for iJob in range(nJobs):
-        JobNum_iJob = str(iJob)
-        FileNameBase_iJob = "Job_"+JobNum_iJob
-        OutDir_iJob = OutDirectory+"/Output_"+FileNameBase_iJob+"/"
-        JobName_iJob = "MaCh3_"+FileNameBase_iJob+"_JobNumber_"+str(JobNumber)
-        ScriptDir_iJob = WorkDirectory+"/Script_"+FileNameBase_iJob+"/"
-        ScriptDir_Log_iJob = ScriptDir_iJob+"/SubmitLog"
-        ScriptDir_Error_iJob = ScriptDir_iJob+"/SubmitError"
-        ScriptDir_Output_iJob = ScriptDir_iJob+"/SubmitOutput"
-        ScriptDir_Submit_iJob = ScriptDir_iJob+"/SubmitScript"
-        RunScriptName_iJob = ScriptDir_Submit_iJob+"/RunScript_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".sh"
-        SubmitScriptName_iJob = ScriptDir_Submit_iJob+"/SubmitScript_"+str(iJob)+"_JobNumber_"+str(JobNumber)+".sh"
-        ScriptDirFileName_Error_iJob = ScriptDir_Error_iJob+"/SubmitError+"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
-        ScriptDirFileName_Log_iJob = ScriptDir_Log_iJob+"/SubmitLog+"+str(iJob)+"_JobNumber_"+str(JobNumber)+".log"
+        MkdirCommand  = "mkdir -p "+ScriptDir_iIter
+        os.system(MkdirCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Log_iIter
+        os.system(MkdirCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Error_iIter
+        os.system(MkdirCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Output_iIter
+        os.system(MkdirCommand)
+        MkdirCommand  = "mkdir -p "+ScriptDir_Submit_iIter
+        os.system(MkdirCommand)
 
-        OutputName_iJob = []
-        for iChain in range(nChainsPerJob):
-            OutputName_iJob.append(OutDir_iJob+JobName_iJob+"_Chain_"+str(iChain)+".root")
+        OutDir_iIter = OutDirectory+"/Output_"+FileNameBase_iIter+"/"
+        OutDir_m1_iIter = OutDirectory+"/Output_"+FileNameBase_m1_iIter+"/"
 
-        OutputName_iJob_m1 = []
-        for iChain in range(nChainsPerJob):
-            OutputName_iJob_m1.append(OutDir_iJob+"MaCh3_"+FileNameBase_iJob+"_JobNumber_"+str(JobNumber-1)+"_Chain_"+str(iChain)+".root")
+        MkdirCommand = "mkdir -p "+OutDir_iIter
+        os.system(MkdirCommand)
 
-        ConfigName_iJob = []
-        for iChain in range(nChainsPerJob):
-            ConfigName_iJob.append(ScriptDir_Submit_iJob+"/Config_"+str(iJob)+"_JobNumber_"+str(JobNumber)+"_Chain_"+str(iChain)+".cfg")
-
-        ConsoleOutputName_iJob = []
-        for iChain in range(nChainsPerJob):
-            ConsoleOutputName_iJob.append(ScriptDir_Output_iJob+"/ConsoleOutput_"+str(iJob)+"_JobNumber_"+str(JobNumber)+"_Chain_"+str(iChain)+".log")
+        JobName_iIter = JobName+"_"+str(iIteration)
         
-        MkdirCommand  = "mkdir -p "+ScriptDir_iJob
-        os.system(MkdirCommand)
+        RunScriptName_iIter = ScriptDir_Submit_iIter+"/RunScript_Iter_"+str(iIteration)+".sh"
+        SubmitScriptName_iIter = ScriptDir_Submit_iIter+"/SubmitScript_Iter_"+str(iIteration)+".sh"
+        ScriptDirFileName_Error_iIter = ScriptDir_Error_iIter+"/SubmitError_Iter_"+str(iIteration)+".log"
+        ScriptDirFileName_Log_iIter = ScriptDir_Log_iIter+"/SubmitLog_Iter_"+str(iIteration)+".log"
+
+        OutputName_iIter_ID = []        
+        OutputName_iIter_m1_ID = []
+        ConfigName_iIter_ID = []
+        ConsoleOutputName_iIter_ID = []
+
+        for iExec in range(nExecsPerJob):
+            OutputName_iIter_ID.append(OutDir_iIter+"MaCh3_Job_${ID}_Iter_"+str(iIteration)+"_Exec_"+str(iExec)+".root")
+            OutputName_iIter_m1_ID.append(OutDir_m1_iIter+"MaCh3_Job_${ID}_Iter_"+str(iIteration-1)+"_Exec_"+str(iExec)+".root")
+            ConfigName_iIter_ID.append(ScriptDir_Submit_iIter+"/Config_Job_${ID}_Iter_"+str(iIteration)+"_Exec_"+str(iExec)+".cfg")
+            ConsoleOutputName_iIter_ID.append(ScriptDir_Output_iIter+"/ConsoleOutput_Job_${ID}_Iteration_"+str(iIteration)+"_Exec_"+str(iExec)+".log")
+            
+        for iJob in range(nJobs):
+
+            OutputName_iIter = []
+            OutputName_iIter_m1 = []
+            ConfigName_iIter = []
+            ConsoleOutputName_iIter = []
+
+            for iExec in range(nExecsPerJob):
+                OutputName_iIter.append(OutDir_iIter+"MaCh3_Job_"+str(iJob+1)+"_Iter_"+str(iIteration)+"_Exec_"+str(iExec)+".root")
+                OutputName_iIter_m1.append(OutDir_m1_iIter+"MaCh3_Job_"+str(iJob+1)+"_Iter_"+str(iIteration-1)+"_Exec_"+str(iExec)+".root")
+                ConfigName_iIter.append(ScriptDir_Submit_iIter+"/Config_Job_"+str(iJob+1)+"_Iter_"+str(iIteration)+"_Exec_"+str(iExec)+".cfg")
+                ConsoleOutputName_iIter.append(ScriptDir_Output_iIter+"/ConsoleOutput_Job_"+str(iJob+1)+"_Iteration_"+str(iIteration)+"_Exec_"+str(iExec)+".log")
         
-        MkdirCommand  = "mkdir -p "+ScriptDir_Log_iJob
-        os.system(MkdirCommand)
-
-        MkdirCommand  = "mkdir -p "+ScriptDir_Error_iJob
-        os.system(MkdirCommand)
-
-        MkdirCommand  = "mkdir -p "+ScriptDir_Output_iJob
-        os.system(MkdirCommand)
-
-        MkdirCommand  = "mkdir -p "+ScriptDir_Submit_iJob
-        os.system(MkdirCommand)
-        
-        MkdirCommand = "mkdir -p "+OutDir_iJob
-        os.system(MkdirCommand)
-
-        for iChain in range(nChainsPerJob):
-            if (StartFromFile and os.path.exists(OutputName_iJob_m1[iChain]) == False):
-                print("Starting from previous job but did not find:" + OutputName_iJob_m1[iChain])
-                quit()
+            for iExec in range(nExecsPerJob):
+                Temp_ConfigName = WorkDirectory+"/Config_Temp.cfg"
+                CopyCommand = "cp "+ConfigName+" "+Temp_ConfigName
+                os.system(CopyCommand)
+                            
+                SedCommand = "sed -i 's|OUTPUTNAME.*|OUTPUTNAME = \""+OutputName_iIter[iExec]+"\"|' "+Temp_ConfigName
+                os.system(SedCommand)
                 
-            Temp_ConfigName = WorkDirectory+"/Config_Temp.cfg"
-            CopyCommand = "cp "+ConfigName+" "+Temp_ConfigName
-            os.system(CopyCommand)
-            
-            SedCommand = "sed -i 's|OUTPUTNAME.*|OUTPUTNAME = \""+OutputName_iJob[iChain]+"\"|' "+Temp_ConfigName
-            os.system(SedCommand)
-            
-            if (StartFromFile):
-                SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = true|' "+Temp_ConfigName
-            else:
-                SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = false|' "+Temp_ConfigName
-            os.system(SedCommand)
-            
-            if (StartFromFile):
-                SedCommand = "sed -i 's|POSFILES.*|POSFILES = \""+OutputName_iJob_m1[iChain]+"\"|' "+Temp_ConfigName
+                if (StartFromFile):
+                    SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = true|' "+Temp_ConfigName
+                else:
+                    SedCommand = "sed -i 's|STARTFROMPOS.*|STARTFROMPOS = false|' "+Temp_ConfigName
+                os.system(SedCommand)
+                
+                if (StartFromFile):
+                    SedCommand = "sed -i 's|POSFILES.*|POSFILES = \""+OutputName_iIter_m1[iExec]+"\"|' "+Temp_ConfigName
+                    os.system(SedCommand)
+                
+                SedCommand = "sed -i 's|NSTEPS.*|NSTEPS = "+str(nSteps)+"|' "+Temp_ConfigName
+                os.system(SedCommand)
+                
+                SedCommand = "sed -i 's|ATMCONFIGDIR.*|ATMCONFIGDIR = \""+SampleConfigDir+"\"|' "+Temp_ConfigName
                 os.system(SedCommand)
 
-            SedCommand = "sed -i 's|NSTEPS.*|NSTEPS = "+str(nSteps)+"|' "+Temp_ConfigName
-            os.system(SedCommand)
-
-            SedCommand = "sed -i 's|ATMCONFIGDIR.*|ATMCONFIGDIR = \""+SampleConfigDir+"\"|' "+Temp_ConfigName
-            os.system(SedCommand)
-
-            SedCommand = "sed -i 's|BEAMCONFIGDIR.*|BEAMCONFIGDIR = \""+SampleConfigDir+"\"|' "+Temp_ConfigName
-            os.system(SedCommand)
-
-            mvCommand = "mv "+Temp_ConfigName+" "+ConfigName_iJob[iChain]
-            os.system(mvCommand)
+                SedCommand = "sed -i 's|BEAMCONFIGDIR.*|BEAMCONFIGDIR = \""+SampleConfigDir+"\"|' "+Temp_ConfigName
+                os.system(SedCommand)
+                
+                mvCommand = "mv "+Temp_ConfigName+" "+ConfigName_iIter[iExec]
+                print(mvCommand)
+                os.system(mvCommand)
 
         Temp_RunScriptName = WorkDirectory+"/RunScript_Temp.sh"
         CopyCommand = "cp "+RunScriptName+" "+Temp_RunScriptName
         os.system(CopyCommand)
-
+        
         replaceText(Temp_RunScriptName,"MACH3INSTALL",MaCh3Install)
-        replaceText(Temp_RunScriptName,"NTHREADS",str(int(nThreads/nChainsPerJob)))
-
-        for iChain in range(nChainsPerJob):
-            iGPU = int(iChain/(nChainsPerJob/nGPUsPerJob))
-            SedCommand = "sed -i -e '/^#INSERTJOB/abackground_pid_"+str(iChain)+"=$!' "+Temp_RunScriptName
+        replaceText(Temp_RunScriptName,"NTHREADS",str(int(nThreads/nExecsPerJob)))
+    
+        for iExec in range(nExecsPerJob):
+            iGPU = int(iExec/(nExecsPerJob/nGPUsPerJob))
+            SedCommand = "sed -i -e '/^#INSERTJOB/abackground_pid_"+str(iExec)+"=$!' "+Temp_RunScriptName
             os.system(SedCommand)
-            SedCommand = "sed -i -e '/^#INSERTJOB/a CUDA_VISIBLE_DEVICES=\""+str(iGPU)+"\" "+ExecName+" "+ConfigName_iJob[iChain]+" > "+ConsoleOutputName_iJob[iChain]+" &' "+Temp_RunScriptName
+            SedCommand = "sed -i -e '/^#INSERTJOB/a CUDA_VISIBLE_DEVICES=\""+str(iGPU)+"\" "+ExecName+" "+ConfigName_iIter_ID[iExec]+" > "+ConsoleOutputName_iIter_ID[iExec]+" &' "+Temp_RunScriptName
             os.system(SedCommand)
-
-        for iChain in range(nChainsPerJob):
-            SedCommand = "sed -i -e '/^#INSERTWAIT/await ${background_pid_"+str(iChain)+"} ' "+Temp_RunScriptName
+            
+        for iExec in range(nExecsPerJob):
+            SedCommand = "sed -i -e '/^#INSERTWAIT/await ${background_pid_"+str(iExec)+"} ' "+Temp_RunScriptName
             os.system(SedCommand)
-
-        mvCommand = "mv "+Temp_RunScriptName+" "+RunScriptName_iJob
+            
+        mvCommand = "mv "+Temp_RunScriptName+" "+RunScriptName_iIter
         os.system(mvCommand)
-
+        
         Temp_SubmitScriptName = WorkDirectory+"/SubmitScript_Temp.sh"
         CopyCommand = "cp "+SubmitScriptName+" "+Temp_SubmitScriptName
         os.system(CopyCommand)
-
-        replaceText(Temp_SubmitScriptName,"JOBNAME",JobName_iJob)
-        replaceText(Temp_SubmitScriptName,"EXECUTABLENAME",RunScriptName_iJob)
-        replaceText(Temp_SubmitScriptName,"SUBMITSCRIPTOUTPUT",ScriptDirFileName_Log_iJob)
-        replaceText(Temp_SubmitScriptName,"ERRORFILE",ScriptDirFileName_Error_iJob)
-
-        mvCommand = "mv "+Temp_SubmitScriptName+" "+SubmitScriptName_iJob
+        
+        replaceText(Temp_SubmitScriptName,"JOBNAME",JobName_iIter)
+        replaceText(Temp_SubmitScriptName,"EXECUTABLENAME",RunScriptName_iIter)
+        replaceText(Temp_SubmitScriptName,"SUBMITSCRIPTOUTPUT",ScriptDirFileName_Log_iIter)
+        replaceText(Temp_SubmitScriptName,"ERRORFILE",ScriptDirFileName_Error_iIter)
+        replaceText(Temp_SubmitScriptName,"ARRAY","1-"+str(nJobs))
+        
+        mvCommand = "mv "+Temp_SubmitScriptName+" "+SubmitScriptName_iIter
         os.system(mvCommand)
-
+        
         if (SubmitJobs):
-            Submitted = False
-            
-            SubmitCommand = "sbatch "+SubmitScriptName_iJob
-            #SubmitCommand = "condor_submit "+SubmitScriptName_iJob
-            try:
-                os.system(SubmitCommand)
-                Submitted = True
-            except:
-                print("sbatch command not available")
+            SubmitCommand = "sbatch "
+            if (StartFromFile):
+                if (ID == -1):
+                    print("Found ID == -1... argh")
+                    quit()
+                SubmitCommand += " --dependency=afterany:"+str(ID)+" "
                 
-            if (Submitted == False):
-                SubmitCommand = "qsub "+SubmitScriptName_iJob
-                try:
-                    os.system(SubmitCommand)
-                    Submitted =	True
-                except:
-                    print("qsub command not available")
-
+            SubmitCommand += SubmitScriptName_iIter
+            Return = subprocess.getoutput(SubmitCommand)
+            ID = (Return.split(" "))[-1]
+                                        
 Version = sys.version_info[0]
 if (Version != 3):
     print("Python3 required")
